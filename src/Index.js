@@ -54,9 +54,10 @@ app.use(
 ///
 app.post('/:id/log/', function(req, res){
 
+    var logLine = {timestamp: new Date, ip: req.ip, body: JSON.parse(req.body)};
     var logName = req.params.id;
     Log(options.dir, logName)
-    .write(req.body)
+    .write(JSON.stringify(logLine) + "\n")
     .then(function(){
         res.send();
     });
