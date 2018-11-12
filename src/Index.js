@@ -28,7 +28,8 @@ if(!options.port || !options.dir){
 }
 
 /// normalize options
-options.dir = path.resolve(options.dir);
+if(!options.dir === 'STDOUT')
+  options.dir = path.resolve(options.dir);
 
 
 ///
@@ -54,13 +55,23 @@ app.use(
 ///
 app.post('/:id/log/', function(req, res){
 
-    var logLine = {timestamp: new Date, ip: req.ip, body: JSON.parse(req.body)};
+    var json;
+    try {
+      body = JSON.parse(req.body)
+    } catch {
+      body = req.body
+    }
+    var logLine = {timestamp: new Date, ip: req.ip, body: body};
     var logName = req.params.id;
-    Log(options.dir, logName)
-    .write(JSON.stringify(logLine) + "\n")
-    .then(function(){
-        res.send();
-    });
+    if(options.dir === 'STDOUT') {
+      console.log(JSON.stringify(logLine));
+    } else {
+      Log(options.dir, logName)
+      .write(JSON.stringify(logLine) + "\n")
+      .then(function(){
+          res.send();
+      });
+    }
 
 });
 
@@ -77,8 +88,10 @@ app.listen(options.port);
 ///
 /// Show somethin on stdout
 ///
+if(!options.dir === 'STDOUT') {
 console.log(
     _.template("http://localhost:<%= port %>")({ port: options.port }));
 
 console.log(
     _.template("Logs directory '<%= dir %>'")({ dir: options.dir }));
+}
